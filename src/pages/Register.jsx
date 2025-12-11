@@ -8,7 +8,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { loading, error, user } = useSelector((state) => state.auth);
 
-  const [form, setFAorm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
