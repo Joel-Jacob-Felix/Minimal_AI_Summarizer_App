@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,8 +10,11 @@ export default function Login() {
 
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
+    // debug: confirm onChange fires
+    console.debug("Login input change:", e.target.name, e.target.value);
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,9 +24,9 @@ export default function Login() {
     }
   };
 
-  if (user) {
-    navigate("/");
-  }
+  useEffect(() => {
+    if (user) navigate("/");
+  }, [user, navigate]);
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
