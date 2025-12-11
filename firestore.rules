@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /history/{docId} {
+      // allow authenticated users to create a history item for themselves
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      // allow the owner to read their documents
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      // allow owners to update/delete (optional)
+      allow update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+  }
+}

@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setText, generateSummary } from "../features/summarySlice";
-import { fetchHistory } from "../features/historySlice";
+import { fetchHistory, saveSummary } from "../features/historySlice";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -14,6 +14,8 @@ export default function Dashboard() {
   const { items: history, loading: historyLoading } = useSelector(
     (state) => state.history
   );
+  const { error: historyError } = useSelector((state) => state.history);
+  const [saveError, setSaveError] = useState(null);
 
   // Fetch history when user logs in
   useEffect(() => {
@@ -25,11 +27,28 @@ export default function Dashboard() {
   // Handle summary generation
   const handleGenerate = async () => {
     if (!text.trim()) return;
+    if (!user?.uid) {
+      setSaveError("You must be logged in to save history.");
+      return;
+    }
 
     const res = await dispatch(generateSummary({ text, uid: user.uid }));
 
     if (res.meta.requestStatus === "fulfilled") {
-      dispatch(fetchHistory(user.uid)); // refresh history
+      // res.payload is an array of bullets from generateSummary
+      const bullets = Array.isArray(res.payload) ? res.payload : [res.payload];
+
+      const saveRes = await dispatch(saveSummary({ uid: user.uid, text, summary: bullets }));
+      console.debug("saveSummary result:", saveRes);
+
+      if (saveRes.meta && saveRes.meta.requestStatus === "fulfilled") {
+        // refresh history only if save succeeded
+        setSaveError(null);
+        dispatch(fetchHistory(user.uid));
+      } else {
+        console.error("Failed to save history:", saveRes);
+        setSaveError(saveRes.payload || "Failed to save history");
+      }
     }
   };
 
@@ -76,6 +95,13 @@ export default function Dashboard() {
       <div className="bg-white p-4 rounded shadow">
         <h2 className="text-xl font-semibold mb-3">History</h2>
 
+          {historyError && (
+            <p className="text-sm text-red-500 mb-2">Error loading history: {historyError}</p>
+          )}
+          {saveError && (
+            <p className="text-sm text-red-500 mb-2">{saveError}</p>
+          )}
+
         {historyLoading ? (
           <p>Loading history...</p>
         ) : history.length === 0 ? (
@@ -94,7 +120,11 @@ export default function Dashboard() {
 
                 <p className="font-semibold mb-1">Summary:</p>
                 <ul className="list-disc ml-5">
-                  {item.bullets?.map((b, i) => (
+                  {(Array.isArray(item.summary)
+                    ? item.summary
+                    : item.summary
+                    ? [item.summary]
+                    : item.bullets || []).map((b, i) => (
                     <li key={i}>{b}</li>
                   ))}
                 </ul>

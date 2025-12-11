@@ -3,16 +3,46 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // EXTRACTIVE summarization (no Gemini)
 export const generateSummary = createAsyncThunk(
   "summary/generateSummary",
-  async (text, { rejectWithValue }) => {
+  async ({ text, uid }, { rejectWithValue, dispatch }) => {
     try {
+      if (!text || typeof text !== "string") {
+        return rejectWithValue("Invalid text provided");
+      }
+
       // split into sentences
       const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
 
       // stopwords
       const stopWords = new Set([
-        "the", "is", "in", "and", "to", "a", "of", "that", "for", "on", "with",
-        "as", "by", "this", "it", "be", "are", "was", "were", "at", "from",
-        "or", "an", "but", "if", "then", "because", "so", "while"
+        "the",
+        "is",
+        "in",
+        "and",
+        "to",
+        "a",
+        "of",
+        "that",
+        "for",
+        "on",
+        "with",
+        "as",
+        "by",
+        "this",
+        "it",
+        "be",
+        "are",
+        "was",
+        "were",
+        "at",
+        "from",
+        "or",
+        "an",
+        "but",
+        "if",
+        "then",
+        "because",
+        "so",
+        "while",
       ]);
 
       // word frequency
@@ -28,26 +58,27 @@ export const generateSummary = createAsyncThunk(
 
       // score sentences
       const scored = sentences.map((sentence) => {
-        const words = sentence.toLowerCase().split(/\s+/);
+        const words = sentence
+          .toLowerCase()
+          .replace(/[^a-z\s]/g, "")
+          .split(/\s+/)
+          .filter(Boolean);
         let score = 0;
 
         words.forEach((w) => {
           if (wordFreq[w]) score += wordFreq[w];
         });
 
-        return { sentence, score };
+        return { sentence: sentence.trim(), score };
       });
 
       scored.sort((a, b) => b.score - a.score);
 
       const takeN = Math.max(3, Math.floor(sentences.length * 0.3));
 
-      const summary = scored
-        .slice(0, takeN)
-        .map((s) => s.sentence.trim())
-        .join(" ");
+      const bullets = scored.slice(0, takeN).map((s) => s.sentence);
 
-      return summary || "Could not summarize";
+      return bullets.length ? bullets : ["Could not summarize"];
     } catch (err) {
       console.log(err);
       return rejectWithValue("Summary failed");
@@ -59,7 +90,7 @@ const summarySlice = createSlice({
   name: "summary",
   initialState: {
     text: "",
-    summary: "",
+    summary: [],
     loading: false,
     error: null,
   },
@@ -68,7 +99,7 @@ const summarySlice = createSlice({
       state.text = action.payload;
     },
     clearSummary: (state) => {
-      state.summary = "";
+      state.summary = [];
     },
   },
   extraReducers: (builder) => {
