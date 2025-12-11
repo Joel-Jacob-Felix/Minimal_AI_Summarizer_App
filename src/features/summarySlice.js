@@ -10,8 +10,8 @@ export const generateSummary = createAsyncThunk(
 
       // stopwords
       const stopWords = new Set([
-        "the","is","in","and","to","a","of","that","for","on","with",
-        "as","by","this","it","be","are","was","were","at","from",
+        "the", "is", "in", "and", "to", "a", "of", "that", "for", "on", "with",
+        "as", "by", "this", "it", "be", "are", "was", "were", "at", "from",
         "or", "an", "but", "if", "then", "because", "so", "while"
       ]);
 
@@ -21,18 +21,20 @@ export const generateSummary = createAsyncThunk(
         .toLowerCase()
         .replace(/[^a-z\s]/g, "")
         .split(/\s+/)
-        .filter(w => w && !stopWords.has(w))
-        .forEach(word => {
+        .filter((w) => w && !stopWords.has(w))
+        .forEach((word) => {
           wordFreq[word] = (wordFreq[word] || 0) + 1;
         });
 
       // score sentences
-      const scored = sentences.map(sentence => {
+      const scored = sentences.map((sentence) => {
         const words = sentence.toLowerCase().split(/\s+/);
         let score = 0;
-        words.forEach(w => {
+
+        words.forEach((w) => {
           if (wordFreq[w]) score += wordFreq[w];
         });
+
         return { sentence, score };
       });
 
@@ -42,7 +44,7 @@ export const generateSummary = createAsyncThunk(
 
       const summary = scored
         .slice(0, takeN)
-        .map(s => s.sentence.trim())
+        .map((s) => s.sentence.trim())
         .join(" ");
 
       return summary || "Could not summarize";

@@ -33,7 +33,9 @@ export const fetchHistory = createAsyncThunk(
       where("uid", "==", uid),
       orderBy("createdAt", "desc")
     );
+
     const snap = await getDocs(q);
+
     return snap.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -45,8 +47,8 @@ const historySlice = createSlice({
   name: "history",
   initialState: { items: [] },
   reducers: {},
-  extraReducers: (b) => {
-    b.addCase(fetchHistory.fulfilled, (state, action) => {
+  extraReducers: (builder) => {
+    builder.addCase(fetchHistory.fulfilled, (state, action) => {
       state.items = action.payload;
     });
   },
