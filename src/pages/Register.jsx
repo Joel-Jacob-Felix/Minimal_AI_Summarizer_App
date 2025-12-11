@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/authSlice";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,11 +10,8 @@ export default function Register() {
 
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const handleChange = (e) => {
-    // debug: confirm onChange fires
-    console.debug("Register input change:", e.target.name, e.target.value);
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,9 +21,9 @@ export default function Register() {
     }
   };
 
-  useEffect(() => {
-    if (user) navigate("/");
-  }, [user, navigate]);
+  if (user) {
+    navigate("/");
+  }
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
